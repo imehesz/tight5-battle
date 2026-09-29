@@ -1,0 +1,41 @@
+{
+  "id": "tight5",
+  "title": "Tight 5 FIGHT!",
+  "menuTitle": "TIGHT 5 FIGHT!",
+  "publicFolder": "jax",
+
+  "characters": "characters.json",
+  "venues": "venues.json",
+
+  "backgrounds": {
+    "splash":     "assets/backgrounds/splash.png",
+    "menu":       "assets/backgrounds/menu_bg.png",
+    "streetTile": "assets/backgrounds/street_tile.png"
+  },
+
+  "advancedParallax": true,
+
+  "planeBanners": [
+    "WELCOME to JACKSONVILLE!",
+    "THIS AIN'T GEORGIA!",
+    "DUUUVAL!",
+    "GO JAGS!",
+    "THERE IS COMEDY HERE!",
+    "WHY THE AIRPORT IS IN ANOTHER CITY!"
+  ],
+
+  "boss": {
+    "headSprite": "assets/misc/boss_head.png"
+  },
+  "projectileSprite": "assets/misc/bottle.png",
+
+  "audio": {
+    "musicMain":  "assets/audio/song",
+    "musicVenue": "assets/audio/song_venue"
+  },
+
+  "overrides": {
+    "bodyMale":   null,
+    "bodyFemale": null
+  }
+}
