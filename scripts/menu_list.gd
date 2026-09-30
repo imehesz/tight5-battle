@@ -53,7 +53,8 @@ static func pill_style() -> StyleBoxFlat:
 	return sb
 
 
-## `icons` (optional) holds a Texture2D or null per option.
+## `icons` (optional) holds a Texture2D or null per option. An option with
+## empty text and an icon is an icon-only row.
 func set_options(options: Array, icons: Array = []) -> void:
 	for r in _rows:
 		r.queue_free()
@@ -82,6 +83,7 @@ func set_options(options: Array, icons: Array = []) -> void:
 		l.add_theme_font_size_override("font_size", FONT_SIZE)
 		l.add_theme_color_override("font_outline_color", Color.BLACK)
 		l.add_theme_constant_override("outline_size", 4)
+		l.visible = l.text != ""
 		row.add_child(l)
 		add_child(row)
 		_rows.append(row)
