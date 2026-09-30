@@ -7,6 +7,8 @@ extends RefCounted
 ## plain text.
 
 const SHINE := preload("res://shared/shaders/shine.gdshader")
+const TITLE_SHADER := preload("res://shared/shaders/title_text.gdshader")
+const TITLE_FONT := preload("res://shared/assets/fonts/Bungee-Regular.ttf")
 const SPARKLE := preload("res://shared/assets/fx/sparkle.png")
 const GOLD := Color(1.0, 0.85, 0.4)
 const LOGO := "res://shared/assets/ui/logo.png"
@@ -98,6 +100,79 @@ static func _particles(amount: int, color: Color) -> CPUParticles2D:
 	g.set_color(1, color)
 	p.color_ramp = g
 	return p
+
+
+## Big showy text for dynamic lines the generated cards can't cover ("TERRON
+## BARTLEY WINS!"): chunky display font, gold-to-orange gradient, heavy dark
+## outline, drop shadow and the shine. Too wide for `width`, it wraps at the
+## spaces ("MADELAINE GRINDELAND" / "WINS!"); only a single word too wide for
+## a line on its own makes the font shrink. The box is `width` wide and at
+## least `height` tall, growing for extra lines — centre it on its own size.
+static func title_label(text: String, font_size: int, width: float, height: float,
+		top := Color(1.0, 0.95, 0.55), bottom := Color(1.0, 0.5, 0.08)) -> Label:
+	var l := Label.new()
+	l.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_font_override("font", TITLE_FONT)
+	var size := font_size
+	var lines := _wrap(text, size, width - 24)
+	while size > 10 and _widest(lines, size) > width - 24:
+		size -= 1
+		lines = _wrap(text, size, width - 24)
+	l.text = "\n".join(lines)
+	var spacing := -int(size * 0.2)
+	l.add_theme_constant_override("line_spacing", spacing)
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", Color.WHITE)
+	l.add_theme_color_override("font_outline_color", Color(0.18, 0.06, 0.02))
+	l.add_theme_constant_override("outline_size", maxi(size / 4, 4))
+	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.75))
+	l.add_theme_constant_override("shadow_offset_x", 2)
+	l.add_theme_constant_override("shadow_offset_y", 3)
+	l.add_theme_constant_override("shadow_outline_size", maxi(size / 4, 4))
+	var line_h := TITLE_FONT.get_height(size)
+	var step := line_h + spacing
+	var block := line_h + step * (lines.size() - 1)
+	height = maxf(height, block + 8)
+	MenuScreen.size_later(l, Vector2(width, height))
+	var m := ShaderMaterial.new()
+	m.shader = TITLE_SHADER
+	# The lines sit centred in the box; the gradient runs over each line's caps.
+	var cap := size * 0.72
+	var block_top := (height - block) / 2.0
+	m.set_shader_parameter("line_top", block_top + TITLE_FONT.get_ascent(size) - cap)
+	m.set_shader_parameter("cap", cap)
+	m.set_shader_parameter("line_step", step)
+	m.set_shader_parameter("top_color", top)
+	m.set_shader_parameter("bottom_color", bottom)
+	m.set_shader_parameter("span", width)
+	l.material = m
+	return l
+
+
+## Greedy word wrap: as many words per line as fit `max_w` at `size`.
+static func _wrap(text: String, size: int, max_w: float) -> PackedStringArray:
+	var out := PackedStringArray()
+	var line := ""
+	for word in text.split(" ", false):
+		var trial := word if line == "" else line + " " + word
+		if line != "" and TITLE_FONT.get_string_size(trial, HORIZONTAL_ALIGNMENT_LEFT, -1,
+				size).x > max_w:
+			out.append(line)
+			line = word
+		else:
+			line = trial
+	if line != "":
+		out.append(line)
+	return out
+
+
+static func _widest(lines: PackedStringArray, size: int) -> float:
+	var w := 0.0
+	for s in lines:
+		w = maxf(w, TITLE_FONT.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x)
+	return w
 
 
 ## Fade the screen in from black. Call from the new scene's root.

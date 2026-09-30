@@ -38,6 +38,10 @@ var _pause_layer: CanvasLayer
 var _pause_menu: MenuList
 var _results_layer: CanvasLayer
 var _unpaused_frame := -1
+## DEMO: how long before a press counts (the press that started it mustn't
+## end it), then any button at all goes back to HOME.
+const DEMO_ARM_S := 0.6
+var _demo_armed := false
 
 
 func _ready() -> void:
@@ -57,6 +61,8 @@ func _ready() -> void:
 	GameState.shake_requested.connect(_on_shake)
 	GameState.play_music("venue")
 	_build_pause_menu()
+	if GameState.demo_mode:
+		_build_demo_banner()
 	Fx.fade_in(self, 0.3)
 	_start_round(true)
 
@@ -152,7 +158,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(_delta: float) -> void:
-	if _phase == Phase.FIGHT and not get_tree().paused \
+	if _phase == Phase.FIGHT and not get_tree().paused and not GameState.demo_mode \
 			and Engine.get_process_frames() != _unpaused_frame \
 			and (Input.is_action_just_pressed("p1_start")
 				or Input.is_action_just_pressed("p2_start")):
@@ -247,6 +253,12 @@ func _end_round(winner: int, card: String) -> void:
 func _match_over(winner: int) -> void:
 	_phase = Phase.MATCH_END
 	hud.clear_announce()
+	if GameState.demo_mode:
+		# DEMO: straight into the next random fight. Not recorded — a cabinet
+		# left in demo all day would bury the real TOP FIGHTERS.
+		GameState.start_demo()
+		get_tree().reload_current_scene()
+		return
 	var broke := Leaderboard.record_match(GameState.match_setup, winner, _match_time)
 	_results_layer = CanvasLayer.new()
 	_results_layer.layer = 20
@@ -255,12 +267,13 @@ func _match_over(winner: int) -> void:
 	dim.color = Color(0, 0, 0, 0.6)
 	dim.size = get_viewport_rect().size
 	_results_layer.add_child(dim)
-	var title := _big_label("%s WINS!" % _names[winner], 20)
-	title.position = Vector2(0, 90)
+	# A long name wraps onto two lines; the title grows upward from the score.
+	var title := Fx.title_label("%s WINS!" % _names[winner], 32, 640, 48)
+	title.position = Vector2(0, maxf(8.0, 122.0 - title.size.y))
 	_results_layer.add_child(title)
-	Fx.shine(title, 640, 2.0)
-	Fx.twinkles(_results_layer, Rect2(80, 70, 480, 80), 16)
-	Fx.burst(_results_layer, Vector2(320, 100), 40, Color(1.0, 0.85, 0.4), 200.0)
+	var title_rect := Rect2(title.position, title.size)
+	Fx.twinkles(_results_layer, title_rect.grow_individual(-80, 0, -80, 0), 16)
+	Fx.burst(_results_layer, title_rect.get_center(), 40, Color(1.0, 0.85, 0.4), 200.0)
 	var score := _big_label("%d - %d" % [_wins[0], _wins[1]], 16)
 	score.position = Vector2(0, 124)
 	_results_layer.add_child(score)
@@ -307,6 +320,37 @@ func _on_results_chosen(i: int) -> void:
 			get_tree().change_scene_to_file(GameState.SCENE_FIGHTER_SELECT)
 		2:
 			get_tree().change_scene_to_file(GameState.SCENE_HOME)
+
+
+# ---------------------------------------------------------------- demo
+func _build_demo_banner() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 15
+	add_child(layer)
+	var l := _big_label("DEMO  -  PRESS ANY BUTTON", 8)
+	l.position = Vector2(0, 58)
+	layer.add_child(l)
+	Fx.shine(l, 640, 2.0)
+	var tw := l.create_tween().set_loops()
+	tw.tween_property(l, "modulate:a", 0.35, 0.6)
+	tw.tween_property(l, "modulate:a", 1.0, 0.6)
+	get_tree().create_timer(DEMO_ARM_S).timeout.connect(func(): _demo_armed = true)
+
+
+func _input(event: InputEvent) -> void:
+	if not GameState.demo_mode or not _demo_armed:
+		return
+	var pressed: bool = (event is InputEventKey and event.pressed and not event.echo) \
+			or (event is InputEventJoypadButton and event.pressed) \
+			or (event is InputEventJoypadMotion and absf(event.axis_value) >= GameState.STICK_DEADZONE) \
+			or (event is InputEventMouseButton and event.pressed)
+	if not pressed:
+		return
+	_demo_armed = false
+	get_viewport().set_input_as_handled()
+	GameState.demo_mode = false
+	Engine.time_scale = 1.0
+	get_tree().change_scene_to_file(GameState.SCENE_HOME)
 
 
 # ---------------------------------------------------------------- pause

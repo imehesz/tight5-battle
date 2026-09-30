@@ -1,5 +1,5 @@
 extends MenuScreen
-## HOME: PLAY, SETTINGS, LEADERBOARD. KICK goes back to the splash.
+## HOME: PLAY, SETTINGS, LEADERBOARD, DEMO. KICK goes back to the splash.
 
 var _menu: MenuList
 
@@ -13,14 +13,15 @@ func _ready() -> void:
 	_menu.position = Vector2(170, 184)
 	_menu.size = Vector2(300, 130)
 	add_child(_menu)
-	_menu.set_options(["PLAY", "SETTINGS", "LEADERBOARD"],
-			[Fx.icon("play"), Fx.icon("settings"), Fx.icon("leaderboard")])
+	_menu.set_options(["PLAY", "SETTINGS", "LEADERBOARD", "DEMO"],
+			[Fx.icon("play"), Fx.icon("settings"), Fx.icon("leaderboard"), Fx.icon("cvc")])
 	_menu.chosen.connect(_on_chosen)
 	_menu.back_pressed.connect(func(): go(GameState.SCENE_SPLASH))
 	add_hint()
 	GameState.play_music("main")
 	# Back at HOME = the sitting is over; VS CPU streaks start again.
 	GameState.vs_cpu_streak = [0, 0, 0]
+	GameState.demo_mode = false
 
 
 func _on_chosen(i: int) -> void:
@@ -31,3 +32,6 @@ func _on_chosen(i: int) -> void:
 			go(GameState.SCENE_SETTINGS)
 		2:
 			go(GameState.SCENE_LEADERBOARD)
+		3:
+			GameState.start_demo()
+			go(GameState.SCENE_FIGHT)

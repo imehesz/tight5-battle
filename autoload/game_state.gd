@@ -85,6 +85,8 @@ var _leaderboard_file := ""
 ## Current 1P VS CPU win streak per difficulty (Leaderboard). Lives for one
 ## sitting: HOME resets it.
 var vs_cpu_streak: Array[int] = [0, 0, 0]
+## HOME → DEMO: endless random CPU vs CPU fights until any button is pressed.
+var demo_mode := false
 ## data/config.json, loaded at boot.
 var config := {}
 var _music_player: AudioStreamPlayer
@@ -255,6 +257,13 @@ func reroll_match() -> void:
 		for k in ["character", "outfit", "weapon", "decor"]:
 			side[k] = RANDOM
 		side["locked"] = false
+
+
+## DEMO: a fresh all-random CPU vs CPU fight, both sides HARD (the most
+## action). The fight scene chains them until someone presses a button.
+func start_demo() -> void:
+	random_match(Mode.CVC, Difficulty.HARD)
+	demo_mode = true
 
 
 ## CPU vs CPU with its own difficulty per side (an exhibition).

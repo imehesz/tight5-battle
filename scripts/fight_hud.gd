@@ -24,6 +24,8 @@ const TRAIL := Color(1.0, 0.95, 0.8)
 const TRAIL_DELAY := 0.35
 const CARD_H := 72.0
 const CARD_CENTER := Vector2(320, 140)
+const ANNOUNCE_FONT := 36
+const ANNOUNCE_BOX := Vector2(640, 56)
 
 var _fills: Array[ColorRect] = []
 var _trails: Array[ColorRect] = []
@@ -143,13 +145,8 @@ func _ready() -> void:
 	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_timer_label)
 
-	_announce = _label(28)
-	_announce.add_theme_constant_override("outline_size", 8)
-	_announce.position = Vector2(0, 120)
-	MenuScreen.size_later(_announce, Vector2(w, 40))
-	_announce.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_announce.visible = false
-	add_child(_announce)
+	# The text announcer (winner lines, ROUND 4+) is built per announce by
+	# Fx.title_label, since its font shrinks to fit each name.
 
 	_card = TextureRect.new()
 	_card.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -213,28 +210,40 @@ func announce(text: String, color := GOLD, hold := 0.0) -> void:
 		_show_card(card, text, hold)
 		return
 	_card.visible = false
-	_announce.text = text
-	_announce.modulate = color
-	_announce.visible = true
-	_announce.scale = Vector2(1.0, 1.0)
+	_free_announce()
+	_announce = Fx.title_label(text, ANNOUNCE_FONT, 640.0, ANNOUNCE_BOX.y)
+	_announce.position = Vector2(0, CARD_CENTER.y - _announce.size.y / 2.0)
 	_announce.pivot_offset = _announce.size / 2.0
+	add_child(_announce)
+	# Same slam-in as the cards: big and see-through, down to size with an
+	# overshoot, then a burst of sparkles.
+	_announce.scale = Vector2(2.0, 2.0)
+	_announce.modulate.a = 0.0
 	_announce_tw = create_tween()
-	_announce_tw.tween_property(_announce, "scale", Vector2(1.15, 1.15), 0.08)
-	_announce_tw.tween_property(_announce, "scale", Vector2.ONE, 0.12)
+	_announce_tw.tween_property(_announce, "scale", Vector2.ONE, 0.22) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_announce_tw.parallel().tween_property(_announce, "modulate:a", 1.0, 0.12)
+	_announce_tw.tween_callback(func(): Fx.burst(self, CARD_CENTER, 24, color, 160.0))
 	if hold > 0.0:
 		_announce_tw.tween_interval(hold)
 		_announce_tw.tween_callback(clear_announce)
 
 
 func clear_announce() -> void:
-	_announce.visible = false
+	_free_announce()
 	_card.visible = false
+
+
+func _free_announce() -> void:
+	if is_instance_valid(_announce):
+		_announce.queue_free()
+	_announce = null
 
 
 ## Slam the title card in: big and see-through → full size with an
 ## overshoot, a sparkle burst, and the shine sweeping over it.
 func _show_card(t: Texture2D, text: String, hold: float) -> void:
-	_announce.visible = false
+	_free_announce()
 	var h := CARD_H * (1.33 if text == "FINAL ROUND" else 1.0)
 	_card.texture = t
 	_card.size = Vector2(h * t.get_width() / t.get_height(), h)
