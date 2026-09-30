@@ -85,6 +85,11 @@ var _leaderboard_file := ""
 ## Current 1P VS CPU win streak per difficulty (Leaderboard). Lives for one
 ## sitting: HOME resets it.
 var vs_cpu_streak: Array[int] = [0, 0, 0]
+## SETTINGS → CONTROLS → SIDES: when true, gamepad 2 (the right-hand
+## controls) plays P1 and gamepad 1 plays P2 — someone at the right-hand stick
+## can take on the CPU, and it fixes the two identical cabinet encoders coming
+## up in the wrong order. Keyboards never swap.
+var swap_pads := false
 ## HOME → DEMO: endless random CPU vs CPU fights until any button is pressed.
 var demo_mode := false
 ## data/config.json, loaded at boot.
@@ -115,6 +120,7 @@ func _ready() -> void:
 	_load_roster()
 	_load_settings()
 	_register_input_actions()
+	_apply_pad_sides()
 	_setup_audio()
 
 
@@ -376,6 +382,22 @@ func _register_input_actions() -> void:
 	InputMap.action_add_event("p1_start", esc)
 
 
+## Point every gamepad binding at the pad its player uses (see swap_pads).
+func _apply_pad_sides() -> void:
+	for player in KEYS:
+		var device: int = (player - 1) if not swap_pads else (2 - player)
+		for action in KEYS[player]:
+			for e in InputMap.action_get_events("p%d_%s" % [player, action]):
+				if e is InputEventJoypadButton or e is InputEventJoypadMotion:
+					e.device = device
+
+
+func set_swap_pads(v: bool) -> void:
+	swap_pads = v
+	_apply_pad_sides()
+	_save_settings()
+
+
 # ---------------------------------------------------------------- juice
 ## Freeze the whole game briefly on a solid hit. Uses Engine.time_scale, so
 ## physics, animations and tweens all pause together; the restore timer runs
@@ -584,6 +606,7 @@ func _load_settings() -> void:
 	var mc: Dictionary = d.get("music_choice", {}) if d.get("music_choice") is Dictionary else {}
 	for slot in music_choice:
 		music_choice[slot] = String(mc.get(slot, ""))
+	swap_pads = bool(d.get("swap_pads", false))
 	var diff: Array = d.get("difficulty", [])
 	for i in mini(diff.size(), 2):
 		last_difficulty[i] = clampi(int(diff[i]), 0, Difficulty.HARD)
@@ -601,6 +624,7 @@ func _save_settings() -> void:
 	_save_json(_settings_file, {
 		"music": music_volume, "sfx": sfx_volume,
 		"music_choice": music_choice,
+		"swap_pads": swap_pads,
 		"difficulty": last_difficulty,
 		"loadouts": {"1": loadouts[1], "2": loadouts[2]},
 		"last_character": {"1": last_character[1], "2": last_character[2]},

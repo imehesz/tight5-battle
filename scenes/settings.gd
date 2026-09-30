@@ -1,7 +1,7 @@
 extends MenuScreen
 ## SETTINGS, in four tabs: SOUNDS (music + SFX volume), RADIO (the songs for
 ## the menus and the fights, see Radio), CONTROLS (both players' bindings, read
-## live from the input map, and the BUTTON TEST) and LEADERBOARD (reset, behind
+## live from the input map, the SIDES swap and the BUTTON TEST) and LEADERBOARD (reset, behind
 ## a password and a NO/YES confirm). Joystick-driven like every
 ## screen: on the tab row left/right switches tabs and down or PUNCH steps into
 ## the tab; inside, up/down picks a row, left/right changes a volume, PUNCH
@@ -43,6 +43,8 @@ var _pages: Array[Control] = []
 ## Per tab, the focusable rows: [highlight panel, label].
 var _items: Array = [[], [], [], []]
 var _radio: Radio
+var _sides_label: Label
+var _pads_label: Label
 var _segments: Array = [[], []]   # SOUNDS: music, sfx
 var _confirm: Control
 var _confirm_list: MenuList
@@ -160,7 +162,7 @@ func _build_controls() -> Control:
 		page.add_child(h)
 	for r in ACTIONS.size():
 		var action: String = ACTIONS[r][0]
-		var y := 28.0 + r * 15.0
+		var y := 26.0 + r * 14.0
 		var cells := [ACTIONS[r][1], _keys_text(1, action), _keys_text(2, action),
 				_pad_text(action)]
 		for c in cols.size():
@@ -168,12 +170,13 @@ func _build_controls() -> Control:
 			l.position = Vector2(cols[c][0], y)
 			MenuScreen.size_later(l, Vector2(140, 10))
 			page.add_child(l)
-	var pads := make_label("GAMEPAD 1 PLAYS P1, GAMEPAD 2 PLAYS P2.", 8, DIM)
-	pads.position = Vector2(0, 184)
-	MenuScreen.size_later(pads, Vector2(BOX.size.x, 10))
-	pads.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	page.add_child(pads)
-	_add_item(page, Tab.CONTROLS, "BUTTON TEST", Rect2(170, 206, 220, 32))
+	_pads_label = make_label("", 8, DIM)
+	_pads_label.position = Vector2(0, 168)
+	MenuScreen.size_later(_pads_label, Vector2(BOX.size.x, 10))
+	_pads_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	page.add_child(_pads_label)
+	_sides_label = _add_item(page, Tab.CONTROLS, "", Rect2(130, 184, 300, 28))
+	_add_item(page, Tab.CONTROLS, "BUTTON TEST", Rect2(170, 218, 220, 28))
 	return page
 
 
@@ -265,6 +268,8 @@ func _process(delta: float) -> void:
 				_nudge_volume(-1)
 			elif _tab == Tab.SOUNDS and just(p, "right"):
 				_nudge_volume(1)
+			elif _tab == Tab.CONTROLS and _row == 1 and (just(p, "left") or just(p, "right")):
+				_toggle_sides()
 			elif _tab == Tab.RADIO and (just(p, "left") or just(p, "right")):
 				_radio.tune(1 if just(p, "right") else -1)
 				GameState.play_sfx("click")
@@ -310,6 +315,9 @@ func _activate() -> void:
 	GameState.play_sfx("click")
 	match _tab:
 		Tab.CONTROLS:
+			if _row == 1:
+				_toggle_sides()
+				return
 			_test = ButtonTest.new()
 			add_child(_test)
 			_test.tree_exited.connect(func():
@@ -325,6 +333,12 @@ func _activate() -> void:
 			add_child(_pin)
 			_pin.accepted.connect(_open_confirm)
 			_pin.tree_exited.connect(func(): _settle = 2)
+
+
+func _toggle_sides() -> void:
+	GameState.set_swap_pads(not GameState.swap_pads)
+	GameState.play_sfx("click")
+	_refresh()
 
 
 func _open_confirm() -> void:
@@ -372,6 +386,12 @@ func _refresh() -> void:
 			_tab == Tab.RADIO and _row > 0)
 	# Tuned to the FIGHT band, the fight song plays; everywhere else the menu song.
 	GameState.play_music("venue" if _tab == Tab.RADIO and _row == 2 else "main")
+	var swapped := GameState.swap_pads
+	var arrows := _tab == Tab.CONTROLS and _row == 1
+	_sides_label.text = ("SIDES  < %s >" if arrows else "SIDES  %s") % \
+			("SWAPPED" if swapped else "NORMAL")
+	_pads_label.text = "GAMEPAD 2 PLAYS P1, GAMEPAD 1 PLAYS P2." if swapped \
+			else "GAMEPAD 1 PLAYS P1, GAMEPAD 2 PLAYS P2."
 	var vols := [GameState.music_volume, GameState.sfx_volume]
 	for i in 2:
 		var lit := roundi(vols[i] * SEGMENTS)
