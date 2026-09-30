@@ -20,3 +20,4 @@ deploy-be/
 tools/*
 
 requirements/
+data/config.json

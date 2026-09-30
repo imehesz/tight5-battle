@@ -30,6 +30,8 @@ var _names: Array[String] = ["", ""]
 var _wins: Array[int] = [0, 0]
 var _round := 1
 var _time_left := ROUND_TIME
+## Fighting time across every round so far (VS CPU fastest win).
+var _match_time := 0.0
 var _phase := Phase.INTRO
 var _ko_check_pending := false
 var _pause_layer: CanvasLayer
@@ -213,6 +215,7 @@ func _time_up() -> void:
 func _end_round(winner: int, card: String) -> void:
 	_phase = Phase.ROUND_END
 	_time_left = maxf(_time_left, 0.0)
+	_match_time += ROUND_TIME - _time_left
 	hud.set_timer(_time_left)
 	for f in _fighters:
 		f.set_input_enabled(false)
@@ -244,6 +247,7 @@ func _end_round(winner: int, card: String) -> void:
 func _match_over(winner: int) -> void:
 	_phase = Phase.MATCH_END
 	hud.clear_announce()
+	var broke := Leaderboard.record_match(GameState.match_setup, winner, _match_time)
 	_results_layer = CanvasLayer.new()
 	_results_layer.layer = 20
 	add_child(_results_layer)
@@ -260,12 +264,38 @@ func _match_over(winner: int) -> void:
 	var score := _big_label("%d - %d" % [_wins[0], _wins[1]], 16)
 	score.position = Vector2(0, 124)
 	_results_layer.add_child(score)
+	_show_records(winner, broke)
 	var menu := MenuList.new()
 	menu.position = Vector2(220, 175)
 	menu.size = Vector2(200, 120)
 	_results_layer.add_child(menu)
 	menu.set_options(["REMATCH", "NEW FIGHT", "HOME"])
 	menu.chosen.connect(_on_results_chosen)
+
+
+## Under the score: the running VS CPU streak, and a flashing NEW RECORD!
+## for any leaderboard record this match just set.
+func _show_records(winner: int, broke: Dictionary) -> void:
+	var lines: Array[String] = []
+	if broke.has("fastest"):
+		lines.append("NEW RECORD!  #%d FASTEST WIN  %s" % [broke["fastest"],
+				Leaderboard.format_time(snappedf(_match_time, 0.1))])
+	if broke.has("streak"):
+		lines.append("NEW RECORD!  BEST STREAK  %d" % broke["streak"])
+	elif GameState.setup_mode() == GameState.Mode.PVC and winner == 0:
+		var lvl := int(GameState.match_setup["sides"][1].get("difficulty", 0))
+		lines.append("WIN STREAK  %d" % GameState.vs_cpu_streak[lvl])
+	for i in lines.size():
+		var record := lines[i].begins_with("NEW")
+		var l := _big_label(lines[i], 8)
+		l.position = Vector2(0, 146 + i * 12)
+		l.modulate = Color(0.55, 1.0, 0.6) if record else Color(0.85, 0.85, 0.9)
+		_results_layer.add_child(l)
+		if record:
+			Fx.shine(l, 640, 1.4)
+			var tw := l.create_tween().set_loops()
+			tw.tween_property(l, "modulate:a", 0.45, 0.35)
+			tw.tween_property(l, "modulate:a", 1.0, 0.35)
 
 
 func _on_results_chosen(i: int) -> void:

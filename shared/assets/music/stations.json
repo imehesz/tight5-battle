@@ -1,0 +1,21 @@
+{
+  "_comment": "RADIO stations (SETTINGS > RADIO). Each station has a MENU and a FIGHT song; either band can play any song. Paths have no extension (GameState._load_stream finds .ogg). Songs collected from the Tight 5 FIGHT! editions; Celebs is the same pair as Orlando.",
+  "stations": [
+    {"id": "jacksonville", "name": "JACKSONVILLE",
+     "menu": "res://games/tight5/assets/audio/song", "fight": "res://games/tight5/assets/audio/song_venue"},
+    {"id": "orlando", "name": "ORLANDO",
+     "menu": "res://shared/assets/music/orlando_menu", "fight": "res://shared/assets/music/orlando_fight"},
+    {"id": "daytona", "name": "DAYTONA",
+     "menu": "res://shared/assets/music/daytona_menu", "fight": "res://shared/assets/music/daytona_fight"},
+    {"id": "miami", "name": "MIAMI",
+     "menu": "res://shared/assets/music/miami_menu", "fight": "res://shared/assets/music/miami_fight"},
+    {"id": "north-central-fl", "name": "NORTH CENTRAL FL",
+     "menu": "res://shared/assets/music/north-central-fl_menu", "fight": "res://shared/assets/music/north-central-fl_fight"},
+    {"id": "panhandle", "name": "PANHANDLE",
+     "menu": "res://shared/assets/music/panhandle_menu", "fight": "res://shared/assets/music/panhandle_fight"},
+    {"id": "halloween", "name": "HALLOWEEN",
+     "menu": "res://shared/assets/music/halloween_menu", "fight": "res://shared/assets/music/halloween_fight"},
+    {"id": "killers", "name": "KILLERS",
+     "menu": "res://shared/assets/music/killers_menu", "fight": "res://shared/assets/music/killers_fight"}
+  ]
+}

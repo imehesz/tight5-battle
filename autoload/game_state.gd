@@ -15,10 +15,16 @@ const SCENE_DIFFICULTY := "res://scenes/difficulty_select.tscn"
 const SCENE_FIGHTER_SELECT := "res://scenes/fighter_select.tscn"
 const SCENE_VENUE_SELECT := "res://scenes/venue_select.tscn"
 const SCENE_FIGHT := "res://scenes/fight.tscn"
+const SCENE_SETTINGS := "res://scenes/settings.tscn"
+const SCENE_LEADERBOARD := "res://scenes/leaderboard.tscn"
 
 ## Names the city edition this build uses (see games/<id>/).
 const ACTIVE_GAME_PATH := "res://data/active_game.json"
+## Operator settings for this build (the leaderboard reset password...).
+const CONFIG_PATH := "res://data/config.json"
 const SETTINGS_PATH := "user://%s_battle_settings.json"
+## The local leaderboard's records (written by the leaderboard milestone).
+const LEADERBOARD_PATH := "user://%s_battle_leaderboard.json"
 
 ## Shared defaults for body sheets; a game may override them in its manifest.
 const DEFAULT_BODY := {
@@ -75,9 +81,23 @@ var last_character := {1: RANDOM, 2: RANDOM}
 var match_setup := {}
 
 var _settings_file := ""
+var _leaderboard_file := ""
+## Current 1P VS CPU win streak per difficulty (Leaderboard). Lives for one
+## sitting: HOME resets it.
+var vs_cpu_streak: Array[int] = [0, 0, 0]
+## data/config.json, loaded at boot.
+var config := {}
 var _music_player: AudioStreamPlayer
 var _music_streams := {}
 var _music_track := ""
+## SETTINGS → RADIO: every song on the dial, [{id, station, kind, path}] with
+## kind "MENU" or "FIGHT" (from shared/assets/music/stations.json).
+var music_tracks: Array = []
+## The song picked per music slot ("main" = menus, "venue" = fights), by track
+## id; "" = the edition's own song from game.json.
+var music_choice := {"main": "", "venue": ""}
+## The edition's own song per slot, by track id (found by path).
+var _music_default := {"main": "", "venue": ""}
 var _sfx_streams := {}
 var _crowd_streams := {}
 var _crowd_last_ms := {}
@@ -107,8 +127,10 @@ func _unhandled_input(event: InputEvent) -> void:
 # ---------------------------------------------------------------- edition
 func _load_active_game() -> void:
 	active_game = String(_load_json(ACTIVE_GAME_PATH).get("active", "tight5"))
+	config = _load_json(CONFIG_PATH)
 	manifest = _load_json(game_path("game.json"))
 	_settings_file = SETTINGS_PATH % active_game
+	_leaderboard_file = LEADERBOARD_PATH % active_game
 
 
 ## Prefix a game-relative path (as stored in game.json / characters.json /
@@ -374,15 +396,24 @@ func _setup_audio() -> void:
 	_music_player = AudioStreamPlayer.new()
 	_music_player.bus = "Music"
 	add_child(_music_player)
+	_load_stations()
 	var tracks: Dictionary = manifest.get("audio", {})
 	for pair in [["main", "musicMain"], ["venue", "musicVenue"]]:
 		var rel = tracks.get(pair[1], null)
 		if rel == null or String(rel) == "":
 			continue
-		var s := _load_stream(game_path(String(rel)))
+		var path := game_path(String(rel))
+		for t in music_tracks:
+			if t["path"] == path:
+				_music_default[pair[0]] = t["id"]
+		var s := _load_stream(path)
 		if s:
 			_set_looping(s)
 			_music_streams[pair[0]] = s
+	# The RADIO picks replace the edition's songs.
+	for slot in music_choice:
+		if music_choice[slot] != "":
+			_load_music_slot(slot, music_choice[slot])
 	for sfx_name in SFX_NAMES:
 		var s := _load_stream(SFX_BASE + sfx_name)
 		if s:
@@ -402,6 +433,62 @@ func _setup_audio() -> void:
 		_scream_player.bus = "SFX"
 		_scream_player.stream = scream
 		add_child(_scream_player)
+
+
+const STATIONS_PATH := "res://shared/assets/music/stations.json"
+
+
+func _load_stations() -> void:
+	music_tracks.clear()
+	for st in _load_json(STATIONS_PATH).get("stations", []):
+		for kind in ["menu", "fight"]:
+			var path := String(st.get(kind, ""))
+			if path != "" and _load_stream_exists(path):
+				music_tracks.append({"id": "%s_%s" % [st.get("id", ""), kind],
+						"station": String(st.get("name", "")), "kind": kind.to_upper(),
+						"path": path})
+
+
+func _load_stream_exists(base_path: String) -> bool:
+	for ext in [".ogg", ".mp3", ".wav"]:
+		if ResourceLoader.exists(base_path + ext):
+			return true
+	return false
+
+
+func music_track(id: String) -> Dictionary:
+	for t in music_tracks:
+		if t["id"] == id:
+			return t
+	return {}
+
+
+## The track id playing in `slot` ("main"/"venue"): the RADIO pick, else the
+## edition's own song.
+func music_track_id(slot: String) -> String:
+	return music_choice[slot] if music_choice[slot] != "" else _music_default[slot]
+
+
+## RADIO: put track `id` in `slot`, save it, and if that slot is the one
+## playing, switch to the new song straight away.
+func set_music_choice(slot: String, id: String) -> void:
+	music_choice[slot] = "" if id == _music_default[slot] else id
+	_load_music_slot(slot, id)
+	_save_settings()
+	if _music_track == slot:
+		_music_track = ""
+		play_music(slot)
+
+
+func _load_music_slot(slot: String, id: String) -> void:
+	var t := music_track(id)
+	if t.is_empty():
+		music_choice[slot] = ""
+		return
+	var s := _load_stream(String(t["path"]))
+	if s:
+		_set_looping(s)
+		_music_streams[slot] = s
 
 
 ## Swap the looping background track; no-op if it's already playing.
@@ -485,6 +572,9 @@ func _load_settings() -> void:
 	var d := _load_json(_settings_file)
 	music_volume = clampf(float(d.get("music", 0.8)), 0.0, 1.0)
 	sfx_volume = clampf(float(d.get("sfx", 0.8)), 0.0, 1.0)
+	var mc: Dictionary = d.get("music_choice", {}) if d.get("music_choice") is Dictionary else {}
+	for slot in music_choice:
+		music_choice[slot] = String(mc.get(slot, ""))
 	var diff: Array = d.get("difficulty", [])
 	for i in mini(diff.size(), 2):
 		last_difficulty[i] = clampi(int(diff[i]), 0, Difficulty.HARD)
@@ -501,10 +591,22 @@ func _load_settings() -> void:
 func _save_settings() -> void:
 	_save_json(_settings_file, {
 		"music": music_volume, "sfx": sfx_volume,
+		"music_choice": music_choice,
 		"difficulty": last_difficulty,
 		"loadouts": {"1": loadouts[1], "2": loadouts[2]},
 		"last_character": {"1": last_character[1], "2": last_character[2]},
 	})
+
+
+## The digits SETTINGS asks for before a leaderboard reset. Empty = no password.
+func reset_password() -> String:
+	return str(config.get("leaderboardResetPassword", ""))
+
+
+## Wipe every leaderboard record (SETTINGS → LEADERBOARD, before an event).
+func reset_leaderboard() -> void:
+	if FileAccess.file_exists(_leaderboard_file):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(_leaderboard_file))
 
 
 # ---------------------------------------------------------------- json helpers

@@ -32,19 +32,25 @@ var _skip_frame := true
 func _init() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_theme_constant_override("separation", 10)
-	_pill_style = StyleBoxFlat.new()
-	_pill_style.bg_color = Color(0.45, 0.12, 0.05, 0.75)
-	_pill_style.border_color = ON
-	_pill_style.set_border_width_all(2)
-	_pill_style.set_corner_radius_all(10)
-	_pill_style.shadow_color = Color(1.0, 0.55, 0.15, 0.45)
-	_pill_style.shadow_size = 6
+	_pill_style = pill_style()
 	sort_children.connect(_snap_pill)
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_VISIBILITY_CHANGED and is_visible_in_tree():
 		_skip_frame = true
+
+
+## The glossy highlight behind a selected option; other screens use it too.
+static func pill_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.45, 0.12, 0.05, 0.75)
+	sb.border_color = ON
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(10)
+	sb.shadow_color = Color(1.0, 0.55, 0.15, 0.45)
+	sb.shadow_size = 6
+	return sb
 
 
 ## `icons` (optional) holds a Texture2D or null per option.
