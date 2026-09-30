@@ -129,6 +129,9 @@ func refresh() -> void:
 		var on := has and e == cursor
 		sb.border_color = accent if on else TILE_EDGE
 		sb.set_border_width_all(3 if on else 1)
+		if on:
+			sb.shadow_color = Color(accent, 0.55)
+			sb.shadow_size = 5
 		t.add_theme_stylebox_override("panel", sb)
 		if has:
 			_fill(t, items[e])

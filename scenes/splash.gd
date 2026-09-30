@@ -18,6 +18,8 @@ func _ready() -> void:
 		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		add_child(art)
+	Fx.twinkles(self, Rect2(0, 0, 640, 360), 16, Color(1.0, 0.9, 0.6))
+	Fx.fade_in(self, 0.4)
 	GameState.play_music("main")
 	# A beat before input counts, so the button that got us here doesn't also
 	# go straight through.

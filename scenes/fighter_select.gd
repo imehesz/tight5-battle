@@ -48,6 +48,8 @@ func _ready() -> void:
 	MenuScreen.size_later(vs, Vector2(40, 20))
 	vs.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(vs)
+	Fx.shine(vs, 40, 2.0)
+	Fx.pulse(vs, 0.15, 1.0)
 	if _sequential:
 		_active = 0 if not _panels[0].is_ready() else 1
 	_refresh_focus()
@@ -77,6 +79,8 @@ func _on_locked(side: int) -> void:
 	for k in p:
 		s[k] = p[k]
 	s["locked"] = true
+	Fx.burst(self, _panels[side].position + _panels[side].ready_point(), 26,
+			P_COLORS[side + 1].lightened(0.3))
 	if not GameState.is_cpu(side):
 		GameState.remember_character(side + 1, int(p["character"]))
 		GameState.remember_loadout(side + 1, int(p["outfit"]), int(p["weapon"]), int(p["decor"]))

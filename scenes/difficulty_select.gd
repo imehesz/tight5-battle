@@ -9,7 +9,8 @@ const DESC := [
 	"USES EVERY MOVE AND BLOCKS. A FAIR FIGHT.",
 	"FAST, BLOCKS, COUNTERS AND PUNISHES. GOOD LUCK.",
 ]
-const ROW_Y := 130.0
+const ICONS := ["beginner", "normal", "hard"]
+const ROW_Y := 100.0
 const ROW_GAP := 44.0
 
 ## Which sides have a row: [side index, caption].
@@ -18,6 +19,7 @@ var _row := 0
 var _values: Array[int] = []
 var _labels: Array[Label] = []
 var _desc: Label
+var _icon: TextureRect
 
 
 func _ready() -> void:
@@ -36,7 +38,8 @@ func _ready() -> void:
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		add_child(l)
 		_labels.append(l)
-	_desc = add_title("", 250, 8, INK)
+	_icon = add_icon(ICONS[0], Rect2(288, 186, 64, 64))
+	_desc = add_title("", 266, 8, INK)
 	add_hint("STICK: CHOOSE    PUNCH: OK    KICK: BACK")
 	_refresh()
 
@@ -55,9 +58,11 @@ func _process(delta: float) -> void:
 		elif just(p, "left"):
 			_values[_row] = wrapi(_values[_row] - 1, 0, 3)
 			_click()
+			_pop_icon()
 		elif just(p, "right"):
 			_values[_row] = wrapi(_values[_row] + 1, 0, 3)
 			_click()
+			_pop_icon()
 		elif confirm(p):
 			GameState.play_sfx("click")
 			for i in _rows.size():
@@ -81,3 +86,14 @@ func _refresh() -> void:
 		_labels[i].text = "%s   %s %s %s" % [_rows[i][1], "<" if on else " ", name, ">" if on else " "]
 		_labels[i].modulate = GOLD if on else DIM
 	_desc.text = DESC[_values[_row]]
+	if _icon:
+		_icon.texture = Fx.icon(ICONS[_values[_row]])
+
+
+func _pop_icon() -> void:
+	if _icon == null:
+		return
+	Fx.burst(self, _icon.position + _icon.size / 2.0, 12)
+	var tw := _icon.create_tween()
+	tw.tween_property(_icon, "scale", Vector2(1.25, 1.25), 0.07)
+	tw.tween_property(_icon, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_BACK)

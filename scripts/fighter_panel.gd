@@ -59,6 +59,11 @@ var _preview_key := ""
 
 ## `header`: "P1", "P2", "CPU HARD"... `loadout`: indices from
 ## GameState.remembered_loadout(), or all RANDOM for a CPU.
+## Centre of the READY! caption, in the panel's space (the lock-in burst).
+func ready_point() -> Vector2:
+	return _ready_label.position + _ready_label.size / 2.0
+
+
 func setup(p_side: int, p_accent: Color, header: String, start_char: int,
 		loadout: Dictionary) -> void:
 	side = p_side
@@ -236,6 +241,8 @@ func _build(header: String) -> void:
 			HORIZONTAL_ALIGNMENT_CENTER)
 	_ready_label = _label("READY!", 20, accent, Vector2(area_x, AREA_Y + 150), Vector2(AREA_W, 24),
 			HORIZONTAL_ALIGNMENT_CENTER)
+	Fx.shine(_ready_label, AREA_W, 1.6)
+	Fx.pulse(_ready_label, 0.08, 0.8)
 
 	_preview_holder = Node2D.new()
 	_preview_holder.position = Vector2(prev_x + PREVIEW_W / 2.0, PREVIEW_FEET_Y)

@@ -54,6 +54,9 @@ func _ready() -> void:
 		sb.bg_color = Color(0.06, 0.05, 0.1)
 		sb.border_color = GOLD if i == 1 else Color(0.3, 0.3, 0.38)
 		sb.set_border_width_all(3 if i == 1 else 1)
+		if i == 1:
+			sb.shadow_color = Color(1.0, 0.6, 0.15, 0.55)
+			sb.shadow_size = 8
 		p.add_theme_stylebox_override("panel", sb)
 		p.clip_contents = true
 		p.modulate = Color.WHITE if i == 1 else Color(1, 1, 1, 0.5)
@@ -64,6 +67,8 @@ func _ready() -> void:
 		art.position = Vector2(3, 3)
 		art.size = r.size - Vector2(6, 6)
 		p.add_child(art)
+		if i == 1:
+			Fx.shine(art, art.size.x, 2.4, 0.0, 0.35)
 		var q := make_label("?", 48 if i == 1 else 28, GOLD)
 		MenuScreen.size_later(q, r.size)
 		q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -78,6 +83,7 @@ func _ready() -> void:
 	arrows.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(arrows)
 	_name = add_title("", CARD_POS.y + CARD.y + 14, 14, INK)
+	Fx.twinkles(self, Rect2(CARD_POS - Vector2(12, 12), CARD + Vector2(24, 24)), 10)
 	add_hint("STICK: BROWSE    PUNCH: FIGHT!    KICK: BACK")
 	_refresh()
 

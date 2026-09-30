@@ -19,6 +19,7 @@ var _settle := 2
 
 func _init() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ready.connect(func(): Fx.fade_in(self))
 
 
 func _process(_delta: float) -> void:
@@ -48,6 +49,43 @@ func build_backdrop(shade := 0.55) -> void:
 	dark.color = Color(0, 0, 0, shade)
 	dark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(dark)
+	Fx.twinkles(self, Rect2(0, 0, 640, 360), 12)
+
+
+## The generated TIGHT 5 BATTLE logo, `width` wide, centred on `center`, with
+## the shine and a few sparkles around it. Null if the art is missing.
+func add_logo(center: Vector2, width: float) -> TextureRect:
+	var t := Fx.tex(Fx.LOGO)
+	if t == null:
+		return null
+	var logo := TextureRect.new()
+	logo.texture = t
+	logo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.size = Vector2(width, width * t.get_height() / t.get_width())
+	logo.position = center - logo.size / 2.0
+	add_child(logo)
+	Fx.shine(logo, logo.size.x, 3.2, 0.0, 0.55)
+	Fx.twinkles(self, Rect2(logo.position, logo.size), 10, Color(1.0, 0.95, 0.7))
+	return logo
+
+
+## A generated icon at `rect`, or null if the art is missing.
+func add_icon(icon_name: String, rect: Rect2) -> TextureRect:
+	var t := Fx.icon(icon_name)
+	if t == null:
+		return null
+	var tr := TextureRect.new()
+	tr.texture = t
+	tr.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tr.position = rect.position
+	tr.size = rect.size
+	tr.pivot_offset = rect.size / 2.0
+	add_child(tr)
+	return tr
 
 
 ## Centered across the full width.

@@ -6,14 +6,16 @@ var _menu: MenuList
 
 func _ready() -> void:
 	build_backdrop(0.5)
-	add_title("TIGHT 5", 56, 20, INK)
-	add_title("BATTLE", 84, 36)
-	add_title(String(GameState.manifest.get("title", "")).to_upper(), 132, 8, DIM)
+	if add_logo(Vector2(320, 82), 260) == null:
+		add_title("TIGHT 5", 56, 20, INK)
+		add_title("BATTLE", 84, 36)
+	add_title(String(GameState.manifest.get("title", "")).to_upper(), 150, 8, DIM)
 	_menu = MenuList.new()
-	_menu.position = Vector2(170, 180)
+	_menu.position = Vector2(170, 184)
 	_menu.size = Vector2(300, 130)
 	add_child(_menu)
-	_menu.set_options(["PLAY", "SETTINGS", "LEADERBOARD"])
+	_menu.set_options(["PLAY", "SETTINGS", "LEADERBOARD"],
+			[Fx.icon("play"), Fx.icon("settings"), Fx.icon("leaderboard")])
 	_menu.chosen.connect(_on_chosen)
 	_menu.back_pressed.connect(func(): go(GameState.SCENE_SPLASH))
 	add_hint()

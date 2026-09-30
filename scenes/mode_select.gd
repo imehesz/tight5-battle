@@ -23,7 +23,7 @@ func _ready() -> void:
 	var labels := []
 	for m in MODES:
 		labels.append(m[0])
-	_menu.set_options(labels)
+	_menu.set_options(labels, [Fx.icon("pvp"), Fx.icon("pvc"), Fx.icon("cvc")])
 	_desc = add_title("", 260, 8, INK)
 	_menu.moved.connect(_show_desc)
 	_menu.chosen.connect(_on_chosen)

@@ -55,6 +55,7 @@ func _ready() -> void:
 	GameState.shake_requested.connect(_on_shake)
 	GameState.play_music("venue")
 	_build_pause_menu()
+	Fx.fade_in(self, 0.3)
 	_start_round(true)
 
 
@@ -253,6 +254,9 @@ func _match_over(winner: int) -> void:
 	var title := _big_label("%s WINS!" % _names[winner], 20)
 	title.position = Vector2(0, 90)
 	_results_layer.add_child(title)
+	Fx.shine(title, 640, 2.0)
+	Fx.twinkles(_results_layer, Rect2(80, 70, 480, 80), 16)
+	Fx.burst(_results_layer, Vector2(320, 100), 40, Color(1.0, 0.85, 0.4), 200.0)
 	var score := _big_label("%d - %d" % [_wins[0], _wins[1]], 16)
 	score.position = Vector2(0, 124)
 	_results_layer.add_child(score)
