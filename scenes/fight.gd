@@ -160,8 +160,8 @@ func _physics_process(delta: float) -> void:
 func _process(_delta: float) -> void:
 	if _phase == Phase.FIGHT and not get_tree().paused and not GameState.demo_mode \
 			and Engine.get_process_frames() != _unpaused_frame \
-			and (Input.is_action_just_pressed("p1_start")
-				or Input.is_action_just_pressed("p2_start")):
+			and (Input.is_action_just_pressed("p1_back")
+				or Input.is_action_just_pressed("p2_back")):
 		_pause(true)
 
 

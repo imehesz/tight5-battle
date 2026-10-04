@@ -105,12 +105,14 @@ func _process(_delta: float) -> void:
 			_move(-1)
 		elif Input.is_action_just_pressed(pre + "down"):
 			_move(1)
-		elif Input.is_action_just_pressed(pre + "punch") \
+		elif Input.is_action_just_pressed(pre + "select") \
+				or Input.is_action_just_pressed(pre + "punch") \
 				or Input.is_action_just_pressed(pre + "start"):
 			GameState.play_sfx("click")
 			chosen.emit(index)
 			return
-		elif Input.is_action_just_pressed(pre + "kick"):
+		elif Input.is_action_just_pressed(pre + "back") \
+				or Input.is_action_just_pressed(pre + "kick"):
 			back_pressed.emit()
 			return
 

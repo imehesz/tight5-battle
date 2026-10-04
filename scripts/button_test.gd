@@ -1,7 +1,7 @@
 class_name ButtonTest
 extends Control
 ## SETTINGS → CONTROLS → BUTTON TEST: both players' panels drawn like the
-## cabinet (8-way stick, buttons in the 3-3-2 layout, START) with a lamp per
+## cabinet (8-way stick, buttons in the 2-3-3 layout, START) with a lamp per
 ## input that lights while it's held. The line along the bottom names the last
 ## RAW input — keyboard key, or gamepad number + button index / stick axis —
 ## and which action it's mapped to, so wiring an encoder shows exactly which
@@ -15,13 +15,13 @@ const STICK_CENTER := Vector2(62, 80)
 const STICK_REACH := 34.0
 const BTN_ORIGIN := Vector2(128, 26)
 const BTN_STEP := Vector2(52, 50)
-## The 3-3-2 panel; "" is a spare button with no action.
-const BUTTON_ROWS := [["punch", "kick", "swing"], ["throw", "block", ""], ["", ""]]
+## The 2-3-3 panel; "" is a spare button with no action.
+const BUTTON_ROWS := [["select", "back"], ["punch", "kick", "swing"], ["throw", "block", ""]]
 const DIRS := {"up": Vector2(0, -1), "down": Vector2(0, 1),
 		"left": Vector2(-1, 0), "right": Vector2(1, 0)}
 const ARROWS := {"up": "^", "down": "v", "left": "<", "right": ">"}
 const ACTIONS := ["left", "right", "up", "down", "punch", "kick", "throw", "swing",
-		"block", "start"]
+		"block", "select", "back", "start"]
 
 ## [player][action] -> lamp Panel.
 var _lamps := {1: {}, 2: {}}
@@ -80,11 +80,11 @@ func _build_panel(player: int, at: Vector2) -> void:
 		_lamps[player][d] = lamp
 	_text("STICK", at + STICK_CENTER + Vector2(-30, STICK_REACH + 22), Vector2(60, 10), 8,
 			MenuScreen.DIM, HORIZONTAL_ALIGNMENT_CENTER)
-	# Buttons, 3-3-2, the bottom row pushed right like the real panel.
+	# Buttons, 2-3-3, the top pair pushed right like the real panel.
 	for r in BUTTON_ROWS.size():
 		for c in BUTTON_ROWS[r].size():
 			var action: String = BUTTON_ROWS[r][c]
-			var col: int = c + (1 if r == 2 else 0)
+			var col: int = c + (1 if BUTTON_ROWS[r].size() == 2 else 0)
 			var center := at + BTN_ORIGIN + Vector2(col * BTN_STEP.x, r * BTN_STEP.y) \
 					+ Vector2(LAMP, LAMP) / 2.0
 			var lamp := _lamp(center, "", 8)

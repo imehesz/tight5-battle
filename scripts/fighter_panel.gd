@@ -151,7 +151,7 @@ func handle_input(player: int) -> void:
 	var pre := "p%d_" % player
 	var j := func(a: String) -> bool: return Input.is_action_just_pressed(pre + a)
 	if stage == Stage.READY:
-		if j.call("kick"):
+		if j.call("back") or j.call("kick"):
 			unlock()
 		return
 	var grid: OptionGrid = _grids[stage]
@@ -163,9 +163,9 @@ func handle_input(player: int) -> void:
 		_moved(grid.move(0, -1))
 	elif j.call("down"):
 		_moved(grid.move(0, 1))
-	elif j.call("punch") or j.call("start"):
+	elif j.call("select") or j.call("punch") or j.call("start"):
 		_confirm(grid.value())
-	elif j.call("kick"):
+	elif j.call("back") or j.call("kick"):
 		if stage == Stage.ROSTER:
 			back_out.emit()
 		else:

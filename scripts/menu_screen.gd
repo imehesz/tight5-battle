@@ -125,13 +125,17 @@ static func make_label(text: String, font_size := 8, color := INK) -> Label:
 
 
 ## Just pressed by `player` (1 or 2): "left", "right", "up", "down", "punch",
-## "kick", "start"... Confirm = PUNCH or START.
+## "kick", "start"... Confirm = SELECT, PUNCH or START; back = BACK or KICK.
 func just(player: int, action: String) -> bool:
 	return Input.is_action_just_pressed("p%d_%s" % [player, action])
 
 
 func confirm(player: int) -> bool:
-	return just(player, "punch") or just(player, "start")
+	return just(player, "select") or just(player, "punch") or just(player, "start")
+
+
+func back(player: int) -> bool:
+	return just(player, "back") or just(player, "kick")
 
 
 func any_just(action: String) -> bool:
@@ -140,6 +144,10 @@ func any_just(action: String) -> bool:
 
 func any_confirm() -> bool:
 	return confirm(1) or confirm(2)
+
+
+func any_back() -> bool:
+	return back(1) or back(2)
 
 
 func go(scene: String) -> void:

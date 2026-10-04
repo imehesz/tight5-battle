@@ -332,22 +332,25 @@ func venue_data(idx: int) -> Dictionary:
 const KEYS := {
 	1: {"left": KEY_A, "right": KEY_D, "up": KEY_W, "down": KEY_S,
 		"punch": KEY_J, "kick": KEY_K, "throw": KEY_L, "swing": KEY_U,
-		"block": KEY_I, "start": KEY_ENTER},
+		"block": KEY_I, "select": KEY_O, "back": KEY_P, "start": KEY_ENTER},
 	2: {"left": KEY_LEFT, "right": KEY_RIGHT, "up": KEY_UP, "down": KEY_DOWN,
 		"punch": KEY_KP_1, "kick": KEY_KP_2, "throw": KEY_KP_3, "swing": KEY_KP_4,
-		"block": KEY_KP_5, "start": KEY_KP_ENTER},
+		"block": KEY_KP_5, "select": KEY_KP_6, "back": KEY_KP_7, "start": KEY_KP_ENTER},
 }
+## Raw indices off the cabinet encoder's BUTTON TEST, not Xbox names.
 const PAD_BUTTONS := {
-	"punch": JOY_BUTTON_A, "kick": JOY_BUTTON_B, "throw": JOY_BUTTON_X,
-	"swing": JOY_BUTTON_Y, "block": JOY_BUTTON_RIGHT_SHOULDER,
-	"start": JOY_BUTTON_START,
-	"left": JOY_BUTTON_DPAD_LEFT, "right": JOY_BUTTON_DPAD_RIGHT,
-	"up": JOY_BUTTON_DPAD_UP, "down": JOY_BUTTON_DPAD_DOWN,
+	"select": 0, "back": 1, "punch": 2, "kick": 3, "swing": 4, "block": 5,
+	"throw": 7, "start": JOY_BUTTON_START,
+	# The cabinet encoders report the stick as a D-pad with both directions
+	# reversed (BUTTON TEST: left 14, right 13, up 12, down 11).
+	"left": JOY_BUTTON_DPAD_RIGHT, "right": JOY_BUTTON_DPAD_LEFT,
+	"up": JOY_BUTTON_DPAD_DOWN, "down": JOY_BUTTON_DPAD_UP,
 }
-## Stick directions: [axis, sign].
+## Stick directions: [axis, sign]. The encoders can also report the stick as
+## axes (mode switch / replug), reversed too: left 0+, right 0-, up 1+, down 1-.
 const PAD_AXES := {
-	"left": [JOY_AXIS_LEFT_X, -1.0], "right": [JOY_AXIS_LEFT_X, 1.0],
-	"up": [JOY_AXIS_LEFT_Y, -1.0], "down": [JOY_AXIS_LEFT_Y, 1.0],
+	"left": [JOY_AXIS_LEFT_X, 1.0], "right": [JOY_AXIS_LEFT_X, -1.0],
+	"up": [JOY_AXIS_LEFT_Y, 1.0], "down": [JOY_AXIS_LEFT_Y, -1.0],
 }
 const STICK_DEADZONE := 0.5
 

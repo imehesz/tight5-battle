@@ -69,7 +69,7 @@ func _process(delta: float) -> void:
 				GameState.set_difficulty(_rows[i][0], _values[i])
 			go(GameState.SCENE_FIGHTER_SELECT)
 			return
-		elif just(p, "kick"):
+		elif back(p):
 			go(GameState.SCENE_MODE)
 			return
 

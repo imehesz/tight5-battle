@@ -30,7 +30,7 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not _armed:
 		return
-	for a in ["p1_start", "p2_start", "p1_punch", "p2_punch"]:
+	for a in ["p1_start", "p2_start", "p1_select", "p2_select", "p1_punch", "p2_punch"]:
 		if Input.is_action_just_pressed(a):
 			_armed = false
 			GameState.play_sfx("click")

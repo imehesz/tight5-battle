@@ -106,7 +106,7 @@ func _process(delta: float) -> void:
 			GameState.match_setup["venue"] = _entries[_index]
 			go(GameState.SCENE_FIGHT)
 			return
-		elif just(p, "kick"):
+		elif back(p):
 			go(GameState.SCENE_FIGHTER_SELECT)
 			return
 

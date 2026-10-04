@@ -24,12 +24,11 @@ const SEG := Vector2(16, 12)
 const ACTIONS := [
 	["left", "LEFT"], ["right", "RIGHT"], ["up", "UP"], ["down", "DOWN / DUCK"],
 	["punch", "PUNCH / OK"], ["kick", "KICK / BACK"], ["throw", "THROW"],
-	["swing", "SWING"], ["block", "BLOCK"], ["start", "START / PAUSE"],
+	["swing", "SWING"], ["block", "BLOCK"], ["select", "SELECT (MENUS)"],
+	["back", "BACK / PAUSE"], ["start", "START"],
 ]
+## The cabinet encoder's buttons are shown by raw number, as BUTTON TEST does.
 const PAD_NAMES := {
-	JOY_BUTTON_A: "A", JOY_BUTTON_B: "B", JOY_BUTTON_X: "X", JOY_BUTTON_Y: "Y",
-	JOY_BUTTON_LEFT_SHOULDER: "LB", JOY_BUTTON_RIGHT_SHOULDER: "RB",
-	JOY_BUTTON_BACK: "BACK", JOY_BUTTON_START: "START",
 	JOY_BUTTON_DPAD_LEFT: "D-PAD", JOY_BUTTON_DPAD_RIGHT: "D-PAD",
 	JOY_BUTTON_DPAD_UP: "D-PAD", JOY_BUTTON_DPAD_DOWN: "D-PAD",
 }
@@ -162,7 +161,7 @@ func _build_controls() -> Control:
 		page.add_child(h)
 	for r in ACTIONS.size():
 		var action: String = ACTIONS[r][0]
-		var y := 26.0 + r * 14.0
+		var y := 26.0 + r * 12.0
 		var cells := [ACTIONS[r][1], _keys_text(1, action), _keys_text(2, action),
 				_pad_text(action)]
 		for c in cols.size():
@@ -171,11 +170,11 @@ func _build_controls() -> Control:
 			MenuScreen.size_later(l, Vector2(140, 10))
 			page.add_child(l)
 	_pads_label = make_label("", 8, DIM)
-	_pads_label.position = Vector2(0, 168)
+	_pads_label.position = Vector2(0, 172)
 	MenuScreen.size_later(_pads_label, Vector2(BOX.size.x, 10))
 	_pads_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	page.add_child(_pads_label)
-	_sides_label = _add_item(page, Tab.CONTROLS, "", Rect2(130, 184, 300, 28))
+	_sides_label = _add_item(page, Tab.CONTROLS, "", Rect2(130, 186, 300, 28))
 	_add_item(page, Tab.CONTROLS, "BUTTON TEST", Rect2(170, 218, 220, 28))
 	return page
 
@@ -256,7 +255,7 @@ func _process(delta: float) -> void:
 				_set_tab(wrapi(_tab + 1, 0, TABS.size()))
 			elif just(p, "down") or confirm(p):
 				_move_row(1)
-			elif just(p, "kick"):
+			elif back(p):
 				go(GameState.SCENE_HOME)
 				return
 		else:
@@ -275,7 +274,7 @@ func _process(delta: float) -> void:
 				GameState.play_sfx("click")
 			elif confirm(p):
 				_activate()
-			elif just(p, "kick"):
+			elif back(p):
 				_row = 0
 				GameState.play_sfx("click")
 				_refresh()

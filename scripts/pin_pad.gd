@@ -96,13 +96,15 @@ func _process(_delta: float) -> void:
 			_move(Vector2i(0, -1))
 		elif Input.is_action_just_pressed(pre + "down"):
 			_move(Vector2i(0, 1))
-		elif Input.is_action_just_pressed(pre + "punch"):
+		elif Input.is_action_just_pressed(pre + "select") \
+				or Input.is_action_just_pressed(pre + "punch"):
 			_press(KEYS[_cursor.y][_cursor.x])
 			return
 		elif Input.is_action_just_pressed(pre + "start"):
 			_press("OK")
 			return
-		elif Input.is_action_just_pressed(pre + "kick"):
+		elif Input.is_action_just_pressed(pre + "back") \
+				or Input.is_action_just_pressed(pre + "kick"):
 			_close()
 			return
 

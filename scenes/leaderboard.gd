@@ -224,7 +224,7 @@ func _process(delta: float) -> void:
 			_page = wrapi(_page + (1 if just(p, "down") else -1), 0, _page_count())
 			GameState.play_sfx("click")
 			_refresh()
-		elif just(p, "kick") or confirm(p):
+		elif back(p) or confirm(p):
 			GameState.play_sfx("click")
 			go(GameState.SCENE_HOME)
 			return

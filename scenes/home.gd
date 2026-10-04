@@ -107,7 +107,7 @@ func _process(delta: float) -> void:
 	super(delta)
 	if _qr == null or not input_ready():
 		return
-	if any_confirm() or any_just("kick"):
+	if any_confirm() or any_back():
 		GameState.play_sfx("click")
 		_qr.queue_free()
 		_qr = null
